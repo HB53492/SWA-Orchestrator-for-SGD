@@ -33,7 +33,7 @@ class SWAorchestrator:
             const_post_warmup_t (int): Number of epochs to hold at the lr ceiling.
             swa_t (int): Total epochs to perform SWA.
             swa_lr_factor (float): Multiplier for SWA LR.
-            swa_threshold (float): Minimum difference between last two batch normalized loss for convergence
+            swa_threshold (float): Minimum difference between last two batch normalized SWA metric for convergence.
             update_bn_every (int): Frequency to update the Batch Norm in SWA.
             mode (str): minimizing or maximizing the metric during plateau check.
             patience (int): Epochs of no improvement to trigger SWA.
