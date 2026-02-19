@@ -130,7 +130,7 @@ class SWAorchestrator:
         step for Stochastic Graident Descent. Checks for plateau once out of the warmup and ceiling phase.
         Triggers SWA upon plateau, else warmup, ceiling phase, then cosine annealing
 
-        metric (float): validation loss for plateau
+        metric (float):  metric for plateau
         '''
         warmup_t = self.sgd_scheduler.warmup_t
         in_decay = self.sgd_epoch > (warmup_t + self.const_post_warmup_t)
