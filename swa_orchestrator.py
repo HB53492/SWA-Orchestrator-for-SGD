@@ -78,30 +78,30 @@ class SWAorchestrator:
         self.swa_model = AveragedModel(model)
         self.swa_scheduler = None
 
-    def step(self, train_loader, val_loss):
+    def step(self, train_loader, metric):
         '''
-        orchestrator.step() called in the training. SGD then SWA
+        orchestrator.step() called in the training loop. SGD then SWA
         
         train_loader (Dataset): Passed for update_bn. Not passed on initalization for flexibility.
-        val_loss (float): For plateau
-         '''
+        metric (float): metric to track for plateau
+        '''
         if self.stop:
             return
         
         if not self.swa_active:
-            self._sgd_step(val_loss)  
+            self._sgd_step(metric)  
         
         else:
             assert self.swa_scheduler is not None
-            self._swa_step(train_loader, val_loss)
+            self._swa_step(train_loader, metric)
 
     def _check_plateau(self, metric, best_metric, period=True):
         '''
-        checks that the model is improving according mode and patience
+        checks that the model is improving according to mode and patience
         
         metric (float-like): current value
         best_metric (float-like): the best value
-        period (Bool): Whether we are in the training period to increment self.cur_patience
+        period (Bool): whether we are in the training period to increment self.cur_patience
         '''
         if self.mode == 'min':
 
@@ -127,7 +127,7 @@ class SWAorchestrator:
 
     def _sgd_step(self, metric):
         '''
-        step for Stochastic Graident Descent. Checks for plateau once out of the warmup and ceiling phase.
+        step for Stochastic Gradient Descent. Checks for plateau once out of the warmup and ceiling phase.
         Triggers SWA upon plateau, else warmup, ceiling phase, then cosine annealing
 
         metric (float):  metric for plateau
@@ -162,10 +162,12 @@ class SWAorchestrator:
         '''
         self.swa_model.update_parameters(self.model)
 
+        # keep track of metrics when the bn is updated
         if self.bn_applied:
             self.swa_metrics.append(metric)
             self.bn_applied = False
 
+        # update batch norm
         if (self.swa_epoch + 1) % self.update_bn_every == 0:
             update_bn(train_loader, self.swa_model)
             self.bn_applied = True
@@ -173,12 +175,14 @@ class SWAorchestrator:
 
         self.swa_scheduler.step()
 
+        # convergence check
         if len(self.swa_metrics) >= 2 and \
             abs(self.swa_metrics[-1] - self.swa_metrics[-2]) <= self.swa_threshold:
 
                 print('>> SWA converged')
                 self.stop = True
 
+        # end of swa training period
         elif self.swa_epoch >= self.swa_t:
             print('>> End of Stochastic Weighted Averaging')
             self.stop = True
