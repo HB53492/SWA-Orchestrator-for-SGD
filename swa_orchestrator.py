@@ -201,12 +201,12 @@ class SWAorchestrator:
         Clears the momentum buffer
         '''
         self.swa_active = True
-        self.bn_updated = False
+        self.bn_updated = False     # to keep track when update_bn is called
 
         cur_lr = self.get_last_lr()
         self.swa_lr = cur_lr * self.swa_lr_factor
 
-        self.swa_metrics = []
+        self.swa_metrics = []       # to keep track of swa metrics with update_bn is called
         self.swa_model.update_parameters(self.model)
 
         print(f'> Current SGD lr {cur_lr:6f} | SWA lr: {self.swa_lr:6f}')
