@@ -137,7 +137,7 @@ class SWAorchestrator:
         
         self.best_sgd_metric = self._check_plateau(metric, self.best_sgd_metric, in_decay)
 
-        if self.cur_patience >= self.patience:
+        if self.cur_patience > self.patience:
             print('>> Plateau reached during Stochastic Gradient Descent')
             print('>> Beginning Stochastic Weighted Averaging')
             
@@ -163,14 +163,14 @@ class SWAorchestrator:
         self.swa_model.update_parameters(self.model)
 
         # keep track of metrics when the bn is updated
-        if self.bn_applied:
+        if self.bn_updated:
             self.swa_metrics.append(metric)
-            self.bn_applied = False
+            self.bn_updated = False
 
         # update batch norm
         if (self.swa_epoch + 1) % self.update_bn_every == 0:
             update_bn(train_loader, self.swa_model)
-            self.bn_applied = True
+            self.bn_updated = True
             print('> Batch Norm updated')
 
         self.swa_scheduler.step()
@@ -201,7 +201,7 @@ class SWAorchestrator:
         Clears the momentum buffer
         '''
         self.swa_active = True
-        self.bn_applied = False
+        self.bn_updated = False
 
         cur_lr = self.get_last_lr()
         self.swa_lr = cur_lr * self.swa_lr_factor
